@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Autoriser l'accès direct aux fichiers dans le dossier public
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^(.*)$ /public/$1 [L]
+
+# Gérer les erreurs 404
+ErrorDocument 404 /public/index.php
