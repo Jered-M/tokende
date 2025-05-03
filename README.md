@@ -1,5 +1,9 @@
 # Tokende - Site de Transport
 
+![GitHub repo size](https://img.shields.io/github/repo-size/Jered-M/tokende)
+![GitHub stars](https://img.shields.io/github/stars/Jered-M/tokende?style=social)
+![GitHub license](https://img.shields.io/github/license/Jered-M/tokende)
+
 Tokende est une application web de transport inspirée des plateformes comme Uber. Ce projet est encore en phase de développement initial et vise à fournir une solution de transport rapide et fiable.
 
 ## Fonctionnalités actuelles

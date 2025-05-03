@@ -1,5 +1,5 @@
 # Ignorer les fichiers de configuration sensibles
-config/config.php
+# config/config.php
 
 # Ignorer les fichiers temporaires
 *.log
