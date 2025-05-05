@@ -1,5 +1,12 @@
 {
     "name": "jeredminono/likes",
-    "description": "Un nouveau projet PHP",
-    "require": {}
+    "description": "Un site de transport inspiré d'Uber",
+    "type": "project",
+    "version": "1.0.0",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
 }

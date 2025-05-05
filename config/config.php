@@ -1,10 +1,10 @@
 <?php
-// Exemple de configuration (ne pas inclure les vraies informations sensibles)
-define('DB_HOST', '127.0.0.1');
-define('DB_PORT', '3306');
-define('DB_NAME', 'example_database');
-define('DB_USER', 'example_user');
-define('DB_PASS', 'example_password');
+// Remplacez les valeurs ci-dessous par vos informations de connexion correctes
+define('DB_HOST', '127.0.0.1'); // Adresse du serveur MySQL
+define('DB_PORT', '3306');      // Port MySQL par défaut
+define('DB_NAME', 'votre_base_de_donnees'); // Remplacez par le nom exact de votre base de données
+define('DB_USER', 'votre_utilisateur'); // Nom d'utilisateur MySQL
+define('DB_PASS', 'votre_mot_de_passe'); // Mot de passe MySQL
 
 /**
  * Fonction de connexion à la base de données avec PDO
