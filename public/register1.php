@@ -1,4 +1,12 @@
 <?php
+// Ajout d'une fonction utilitaire pour vérifier si un email existe déjà
+function emailExists($pdo, $email) {
+    $query = "SELECT COUNT(*) FROM users WHERE email = :email";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([':email' => $email]);
+    return $stmt->fetchColumn() > 0;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Récupérer les données du formulaire
     $nom = $_POST['nom'];
@@ -14,14 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once '../config/database.php'; // Utilisez un fichier de configuration partagé
 
     try {
-        // Vérifiez si l'email existe déjà
-        $sql = "SELECT COUNT(*) FROM users WHERE email = :email"; // Mise à jour pour utiliser la table `users`
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([':email' => $email]);
-        $emailExists = $stmt->fetchColumn();
-
-        if ($emailExists) {
+        // Exemple d'utilisation dans le fichier
+        if (emailExists($pdo, $email)) {
             echo "<p style='color: red; text-align: center;'>Ce compte ou cet email existe déjà.</p>";
+            exit;
         } else {
             // Insérer les données dans la table `users`
             $sql = "INSERT INTO users (nom, postnom, prenom, email, telephone, sexe, date_naissance, mot_de_passe) 

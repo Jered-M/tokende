@@ -12,6 +12,8 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/../config/database.php'; // Inclure la configuration de la base de données
+
+// Utilisation de la variable globale $profile_picture pour afficher la photo de profil
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -89,8 +91,9 @@ require_once __DIR__ . '/../config/database.php'; // Inclure la configuration de
         </a>
         <ul class="sidenav-menu">
             <li><a href="#"><i class="fas fa-home fa-fw me-3"></i>Accueil</a></li>
-            <li><a href="#"><i class="fas fa-fire fa-fw me-3"></i>Tendances</a></li>
-            <li><a href="#"><i class="fab fa-youtube-square fa-fw me-3"></i>Abonnements</a></li>
+            <li><a href="reservation.php"><i class="fas fa-calendar-check fa-fw me-3"></i>reservation</a></li>
+            <li><a href="messages.php"><i class="fas fa-envelope fa-fw me-3"></i>Messages</a></li>
+            <li><a href="recherche.php"><i class="fas fa-search fa-fw me-3"></i>Recherche</a></li>
             <hr>
             <li><a href="#"><i class="fas fa-caret-square-right fa-fw me-3"></i>Bibliothèque</a></li>
             <li><a href="#"><i class="fas fa-history fa-fw me-3"></i>Historique</a></li>
@@ -103,7 +106,7 @@ require_once __DIR__ . '/../config/database.php'; // Inclure la configuration de
      <div class="navbar">
         <!-- Redirige vers le profil lorsqu'on clique sur l'icône -->
         <a href="profil.php" class="profile-icon" id="profileLink">
-            <img src="https://via.placeholder.com/40" alt="Profil">
+            <img src="<?php echo $profile_picture; ?>" alt="Photo de profil">
         </a>
     </div>
     <!-- Main Content -->

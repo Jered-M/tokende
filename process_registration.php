@@ -1,5 +1,13 @@
 <?php
-require_once __DIR__ . '/config/config.php'; // Utilisation d'un chemin absolu basé sur __DIR__
+require_once __DIR__ . '/config/config.php'; // Utilisation d'un chemin absolu basé sur __DIR'
+
+// Ajout d'une fonction utilitaire pour vérifier si un email existe déjà
+function emailExists($pdo, $email) {
+    $query = "SELECT COUNT(*) FROM users WHERE email = ?";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$email]);
+    return $stmt->fetchColumn() > 0;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Récupérer les données du formulaire
@@ -16,13 +24,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo = getDatabaseConnection();
 
         // Vérifier si l'email existe déjà
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        $emailExists = $stmt->fetchColumn() > 0;
-
-        if ($emailExists) {
+        if (emailExists($pdo, $email)) {
             // Si l'email existe, afficher un message et un lien vers la page de connexion
             echo "Un compte avec cet email existe déjà. <a href='login.php'>Connectez-vous ici</a>.";
+            exit;
         } else {
             // Insérer les données dans la table `users`
             $stmt = $pdo->prepare("INSERT INTO users (nom, postnom, prenom, date_naissance, sexe, email, mot_de_passe, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");

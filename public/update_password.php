@@ -21,13 +21,17 @@ if ($new_password !== $confirm_password) {
     exit();
 }
 
-// Vérifier l'ancien mot de passe
-$query = "SELECT password FROM users WHERE id = :user_id";
-$stmt = $pdo->prepare($query);
-$stmt->bindParam(':user_id', $user_id);
-$stmt->execute();
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+// Ajout d'une fonction utilitaire pour récupérer le mot de passe utilisateur
+function getUserPassword($pdo, $user_id) {
+    $query = "SELECT password FROM users WHERE id = :user_id";
+    $stmt = $pdo->prepare($query);
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
+// Vérifier l'ancien mot de passe
+$user = getUserPassword($pdo, $user_id);
 if (!password_verify($current_password, $user['password'])) {
     $_SESSION['error_message'] = "Mot de passe actuel incorrect";
     header("Location: profil.php");

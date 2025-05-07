@@ -18,21 +18,137 @@ if (!$pdo) {
     die("Erreur de connexion à la base de données");
 }
 
-$query = "SELECT * FROM users WHERE id = :user_id";
-$stmt = $pdo->prepare($query);
-$stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
-$stmt->execute();
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+// Ajout d'une fonction utilitaire pour récupérer les informations utilisateur
+function getUserData($pdo, $user_id) {
+    $query = "SELECT * FROM users WHERE id = :user_id";
+    $stmt = $pdo->prepare($query);
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
+// Exemple d'utilisation dans le fichier
+$user = getUserData($pdo, $user_id);
 if (!$user) {
     header("Location: ../login.php");
     exit();
 }
 
-// Chemin par défaut pour les photos de profil
-$profile_picture = isset($user['profile_picture']) && !empty($user['profile_picture'])
-    ? $user['profile_picture']
-    : 'https://via.placeholder.com/150';
+// Ajout d'une fonction pour récupérer ou définir la photo de profil
+function getOrSetProfilePicture($pdo, $user_id, $uploadedFile = null) {
+    if ($uploadedFile && $uploadedFile['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = __DIR__ . '/../uploads/profile_pictures/';
+        $fileName = uniqid() . '-' . basename($uploadedFile['name']);
+        $uploadFile = $uploadDir . $fileName;
+
+        if (move_uploaded_file($uploadedFile['tmp_name'], $uploadFile)) {
+            $query = "UPDATE users SET profile_picture = :profile_picture WHERE id = :user_id";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindParam(':profile_picture', $fileName, PDO::PARAM_STR);
+            $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return '../uploads/profile_pictures/' . $fileName;
+        }
+    }
+
+    $query = "SELECT profile_picture FROM users WHERE id = :user_id";
+    $stmt = $pdo->prepare($query);
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return isset($result['profile_picture']) && !empty($result['profile_picture'])
+        ? '../uploads/profile_pictures/' . $result['profile_picture']
+        : 'https://via.placeholder.com/150';
+}
+
+// Utilisation de la fonction pour gérer la photo de profil
+$profile_picture = getOrSetProfilePicture($pdo, $user_id, $_FILES['profile_picture'] ?? null);
+
+$successMessage = '';
+$errorMessage = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $statut = $_POST['statut'] ?? '';
+    $marqueVoiture = $_POST['marque_voiture'] ?? null;
+    $couleurVoiture = $_POST['couleur_voiture'] ?? null;
+    $plaqueVoiture = $_POST['plaque_voiture'] ?? null;
+
+    if (!empty($statut)) {
+        $sql = "UPDATE users SET statut = :statut";
+        $params = [':statut' => $statut, ':user_id' => $_SESSION['user_id']];
+
+        if ($statut === 'chauffeur') {
+            $sql .= ", marque_voiture = :marque_voiture, couleur_voiture = :couleur_voiture, plaque_voiture = :plaque_voiture";
+            $params[':marque_voiture'] = $marqueVoiture;
+            $params[':couleur_voiture'] = $couleurVoiture;
+            $params[':plaque_voiture'] = $plaqueVoiture;
+        }
+
+        $sql .= " WHERE id = :user_id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+
+        $successMessage = "Votre profil a été mis à jour avec succès.";
+    } else {
+        $errorMessage = "Veuillez sélectionner un statut.";
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['photo'])) {
+    $description = $_POST['description'] ?? '';
+    $uploadedFile = $_FILES['photo'];
+
+    if ($uploadedFile['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = __DIR__ . '/../uploads/photos/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $fileName = uniqid() . '-' . basename($uploadedFile['name']);
+        $uploadFile = $uploadDir . $fileName;
+
+        if (move_uploaded_file($uploadedFile['tmp_name'], $uploadFile)) {
+            $sql = "INSERT INTO publier (user_id, photo, description, created_at) VALUES (:user_id, :photo, :description, NOW())";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':user_id' => $user_id,
+                ':photo' => $fileName,
+                ':description' => $description,
+            ]);
+
+            // Redirection après succès pour éviter la resoumission
+            header("Location: profil.php?success=1");
+            exit();
+        } else {
+            $errorMessage = "Erreur lors du téléchargement de la photo.";
+        }
+    } else {
+        $errorMessage = "Veuillez sélectionner une photo valide.";
+    }
+}
+
+// Vérifier si les colonnes nécessaires existent dans la table `users`
+$columns = ['marque_voiture', 'couleur_voiture', 'plaque_voiture'];
+foreach ($columns as $column) {
+    $columnCheck = $pdo->query("SHOW COLUMNS FROM users LIKE '$column'")->fetch();
+    if (!$columnCheck) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN $column VARCHAR(255) DEFAULT NULL");
+    }
+}
+
+// Récupérer les informations actuelles de l'utilisateur
+$sql = "SELECT statut, marque_voiture, couleur_voiture, plaque_voiture FROM users WHERE id = :user_id";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([':user_id' => $_SESSION['user_id']]);
+$userData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Récupérer le statut actuel de l'utilisateur
+$sql = "SELECT statut FROM users WHERE id = :user_id";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([':user_id' => $_SESSION['user_id']]);
+$currentStatut = $stmt->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -118,6 +234,13 @@ $profile_picture = isset($user['profile_picture']) && !empty($user['profile_pict
             object-fit: cover;
         }
     </style>
+    <script>
+        function toggleChauffeurForm() {
+            const statut = document.getElementById('statut').value;
+            const chauffeurForm = document.getElementById('chauffeur-form');
+            chauffeurForm.style.display = (statut === 'chauffeur') ? 'block' : 'none';
+        }
+    </script>
 </head>
 <body>
     <div class="sidenav">
@@ -232,7 +355,7 @@ $profile_picture = isset($user['profile_picture']) && !empty($user['profile_pict
                                                     <span class="bi bi-telephone-fill me-2"></span>
                                                     Téléphone
                                                 </h6>
-                                                <span><?php echo htmlspecialchars($user['numero'] ?? 'Non spécifié'); ?></span>
+                                                <span><?php echo htmlspecialchars($user['telephone'] ?? 'Non spécifié'); ?></span> 
                                             </li>
                                             <li class="list-group-item">
                                                 <h6 class="mb-1">
@@ -264,6 +387,33 @@ $profile_picture = isset($user['profile_picture']) && !empty($user['profile_pict
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-12">
+                                <div class="card widget-card border-light shadow-sm">
+                                    <div class="card-header text-bg-primary">Publier une photo</div>
+                                    <div class="card-body">
+                                        <button class="btn btn-primary" onclick="togglePublicationForm()">Publier</button>
+                                        <form id="publicationForm" action="profil.php" method="post" enctype="multipart/form-data" style="display: none; margin-top: 20px;">
+                                            <div class="mb-3">
+                                                <label for="photoUpload" class="form-label">Choisir une photo</label>
+                                                <input type="file" class="form-control" id="photoUpload" name="photo" accept="image/*" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="description" class="form-label">Description</label>
+                                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-success">Publier</button>
+                                            <button type="button" class="btn btn-secondary" onclick="togglePublicationForm()">Annuler</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <script>
+                                function togglePublicationForm() {
+                                    const form = document.getElementById('publicationForm');
+                                    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+                                }
+                            </script>
                         </div>
                     </div>
                     <div class="col-12 col-lg-8 col-xl-9">
@@ -336,7 +486,7 @@ $profile_picture = isset($user['profile_picture']) && !empty($user['profile_pict
                                         </div>
                                     </div>
                                     <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
-                                        <form action="update_profile.php" method="post" enctype="multipart/form-data" class="row gy-3 gy-xxl-4">
+                                        <form action="profil.php" method="post" enctype="multipart/form-data" class="row gy-3 gy-xxl-4">
                                             <div class="col-12">
                                                 <div class="row gy-2">
                                                     <label class="col-12 form-label m-0">Image de profil</label>
@@ -388,10 +538,36 @@ $profile_picture = isset($user['profile_picture']) && !empty($user['profile_pict
                                                 <label for="inputBio" class="form-label">Biographie</label>
                                                 <textarea class="form-control" id="inputBio" name="bio" rows="3"><?php echo htmlspecialchars($user['bio'] ?? ''); ?></textarea>
                                             </div>
+                                            <div class="col-12 col-md-6">
+                                                <label for="statut" class="form-label">Statut</label>
+                                                <select class="form-select" id="statut" name="statut" onchange="toggleChauffeurForm()" required>
+                                                    <option value="utilisateur" <?php echo $currentStatut === 'utilisateur' ? 'selected' : ''; ?>>Utilisateur</option>
+                                                    <option value="chauffeur" <?php echo $currentStatut === 'chauffeur' ? 'selected' : ''; ?>>Chauffeur</option>
+                                                </select>
+                                            </div>
+                                            <div id="chauffeur-form" style="display: <?php echo $userData['statut'] === 'chauffeur' ? 'block' : 'none'; ?>;">
+                                                <div class="col-12 col-md-6">
+                                                    <label for="marque_voiture" class="form-label">Marque de la voiture</label>
+                                                    <input type="text" class="form-control" id="marque_voiture" name="marque_voiture" value="<?php echo htmlspecialchars($userData['marque_voiture'] ?? ''); ?>">
+                                                </div>
+                                                <div class="col-12 col-md-6">
+                                                    <label for="couleur_voiture" class="form-label">Couleur de la voiture</label>
+                                                    <input type="text" class="form-control" id="couleur_voiture" name="couleur_voiture" value="<?php echo htmlspecialchars($userData['couleur_voiture'] ?? ''); ?>">
+                                                </div>
+                                                <div class="col-12 col-md-6">
+                                                    <label for="plaque_voiture" class="form-label">Plaque de la voiture</label>
+                                                    <input type="text" class="form-control" id="plaque_voiture" name="plaque_voiture" value="<?php echo htmlspecialchars($userData['plaque_voiture'] ?? ''); ?>">
+                                                </div>
+                                            </div>
                                             <div class="col-12">
                                                 <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
                                             </div>
                                         </form>
+                                        <?php if (!empty($successMessage)): ?>
+                                            <div class="alert alert-success mt-3"><?php echo htmlspecialchars($successMessage); ?></div>
+                                        <?php elseif (!empty($errorMessage)): ?>
+                                            <div class="alert alert-danger mt-3"><?php echo htmlspecialchars($errorMessage); ?></div>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="tab-pane fade" id="password-tab-pane" role="tabpanel" aria-labelledby="password-tab" tabindex="0">
                                         <form action="update_password.php" method="post">
@@ -413,6 +589,42 @@ $profile_picture = isset($user['profile_picture']) && !empty($user['profile_pict
                                                 </div>
                                             </div>
                                         </form>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="card widget-card border-light shadow-sm">
+                                            <div class="card-header text-bg-primary">Mes Publications</div>
+                                            <div class="card-body">
+                                                <?php
+                                                $sql = "SELECT p.photo, p.description, p.created_at, u.username 
+                                                        FROM publier p 
+                                                        JOIN users u ON p.user_id = u.id 
+                                                        WHERE p.user_id = :user_id 
+                                                        ORDER BY p.created_at DESC";
+                                                $stmt = $pdo->prepare($sql);
+                                                $stmt->execute([':user_id' => $user_id]);
+                                                $publications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                                                if ($publications): ?>
+                                                    <div class="row">
+                                                        <?php foreach ($publications as $publication): ?>
+                                                            <div class="col-md-4 mb-4">
+                                                                <div class="card">
+                                                                    <img src="../uploads/photos/<?php echo htmlspecialchars($publication['photo']); ?>" class="card-img-top" alt="Photo">
+                                                                    <div class="card-body">
+                                                                        <h5 class="card-title">Publié par <?php echo htmlspecialchars($publication['username'] ?? 'Utilisateur inconnu', ENT_QUOTES, 'UTF-8'); ?></h5>
+                                                                        <p class="card-text">Description : <?php echo htmlspecialchars($publication['description'] ?? '', ENT_QUOTES, 'UTF-8'); ?></p>
+                                                                        <p class="card-text"><small class="text-muted">Publié le <?php echo htmlspecialchars($publication['created_at']); ?></small></p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                        <!-- Fin de la boucle foreach -->
+                                                    </div>
+                                                <?php else: ?>
+                                                    <p class="text-center">Aucune publication trouvée.</p>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -451,4 +663,4 @@ $profile_picture = isset($user['profile_picture']) && !empty($user['profile_pict
         });
     </script>
 </body>
-</html></div>
+</html>

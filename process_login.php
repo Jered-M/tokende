@@ -8,6 +8,14 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Ajout d'une fonction utilitaire pour récupérer les informations utilisateur
+function getUserByEmail($pdo, $email) {
+    $query = "SELECT id, username, mot_de_passe FROM users WHERE email = ?";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$email]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $mot_de_passe = $_POST['mot_de_passe'] ?? '';
@@ -25,12 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("La connexion à la base de données a échoué.");
         }
 
-        $stmt = $pdo->prepare("SELECT id, username, mot_de_passe FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
+        $user = getUserByEmail($pdo, $email);
         if (!$user) {
-            // User not found but don't reveal that specifically (security)
             $_SESSION['error_message'] = "Identifiants incorrects";
             header("Location: login.php");
             exit;

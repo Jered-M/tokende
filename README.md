@@ -21,6 +21,12 @@ Tokende est une application web de transport inspirée des plateformes comme Ube
 - **Paiement en ligne** : Intégration d'un système de paiement sécurisé.
 - **Évaluations et commentaires** : Les clients et les chauffeurs pourront s'évaluer mutuellement.
 
+## Modifications récentes
+- Ajout de la gestion des publications dans le fichier `profil.php`.
+- Amélioration de l'affichage des publications avec des cartes Bootstrap.
+- Ajout de la gestion des erreurs pour le téléchargement des photos.
+- Ajout de la suppression de l'image de profil par défaut.
+
 ## Installation
 
 1. Clonez le dépôt GitHub :
