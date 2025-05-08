@@ -26,6 +26,12 @@ Tokende est une application web de transport inspirée des plateformes comme Ube
 - Amélioration de l'affichage des publications avec des cartes Bootstrap.
 - Ajout de la gestion des erreurs pour le téléchargement des photos.
 - Ajout de la suppression de l'image de profil par défaut.
+- **Ajout d'une carte interactive pour le suivi des taxis** :
+  - Intégration de Leaflet pour afficher une carte centrée sur Lubumbashi.
+  - Mise à jour dynamique de la position d'un taxi via une API.
+  - Chargement des lieux publics (hôpitaux, écoles, pharmacies, restaurants, magasins) à partir de l'API Overpass.
+  - Utilisation d'icônes personnalisées pour différents types de lieux.
+  - Améliorations visuelles avec des styles CSS.
 
 ## Installation
 
@@ -81,3 +87,39 @@ Ce projet est sous licence MIT. Vous êtes libre de l'utiliser, de le modifier e
 
 ---
 **Note** : Ce projet est encore en phase de développement initial. Certaines fonctionnalités peuvent ne pas être entièrement implémentées.
+
+# Suivi de commande - Lubumbashi
+
+## Description
+Cette application permet de suivre la position d'un taxi en temps réel sur une carte interactive et d'afficher des lieux publics tels que des hôpitaux, écoles, pharmacies, restaurants, et magasins dans la région de Lubumbashi.
+
+## Fonctionnalités
+- **Carte interactive** : Utilisation de Leaflet pour afficher une carte centrée sur Lubumbashi.
+- **Position dynamique du taxi** : Mise à jour en temps réel de la position d'un taxi via une API.
+- **Affichage des lieux publics** : Chargement des lieux publics à partir de l'API Overpass.
+- **Icônes personnalisées** : Utilisation d'icônes spécifiques pour différents types de lieux (hôpital, école, pharmacie, etc.).
+
+## Mises à jour du jour
+1. **Ajout d'icônes personnalisées** :
+   - Icônes pour les taxis, hôpitaux, écoles, pharmacies, restaurants, magasins, et un icône par défaut.
+2. **Mise à jour dynamique de la position du taxi** :
+   - Intégration d'une API pour récupérer la position actuelle du taxi toutes les 3 secondes.
+3. **Chargement des lieux publics** :
+   - Utilisation de l'API Overpass pour afficher les lieux publics dans une zone géographique spécifique.
+4. **Améliorations visuelles** :
+   - Ajout de styles CSS pour une meilleure expérience utilisateur.
+
+## Technologies utilisées
+- **PHP** : Gestion des sessions et des requêtes API.
+- **JavaScript** : Intégration de Leaflet et gestion des mises à jour en temps réel.
+- **Leaflet** : Bibliothèque pour la carte interactive.
+- **Overpass API** : Chargement des données des lieux publics.
+- **HTML/CSS** : Structure et style de la page.
+
+## Instructions
+1. Assurez-vous que les dépendances nécessaires (PHP, serveur web) sont installées.
+2. Configurez les fichiers `session.php` et `database.php` pour gérer les sessions et la base de données.
+3. Lancez le projet sur un serveur local et accédez à la page `localisation.php`.
+
+## Auteur
+Jered Minono

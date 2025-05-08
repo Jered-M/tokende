@@ -25,6 +25,11 @@ foreach ($columns as $column => $definition) {
     }
 }
 
+// Récupération des chauffeurs pour la liste déroulante
+$sql = "SELECT id, nom FROM users WHERE statut = 'chauffeur'";
+$stmt = $pdo->query($sql);
+$chauffeurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 // Récupération des chauffeurs
 $sql = "SELECT id, nom, marque_voiture, plaque_immatriculation, couleur_voiture, profile_picture 
         FROM users WHERE statut = 'chauffeur'";

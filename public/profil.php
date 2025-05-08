@@ -248,9 +248,10 @@ $currentStatut = $stmt->fetchColumn();
             <img src="https://mdbootstrap.com/wp-content/uploads/2018/06/logo-mdb-jquery-small.png" alt="MDB Logo" height="25" />
         </a>
         <ul class="sidenav-menu">
-            <li><a href="accueil.php"><i class="fas fa-home fa-fw me-3"></i>Accueil</a></li>
-            <li><a href="#"><i class="fas fa-fire fa-fw me-3"></i>Tendances</a></li>
-            <li><a href="#"><i class="fab fa-youtube-square fa-fw me-3"></i>Abonnements</a></li>
+        <li><a href="accueil.php"><i class="fas fa-home fa-fw me-3"></i>Accueil</a></li>
+            <li><a href="reservation.php"><i class="fas fa-calendar-check fa-fw me-3"></i>reservation</a></li>
+            <li><a href="messages.php"><i class="fas fa-envelope fa-fw me-3"></i>Messages</a></li>
+            <li><a href="recherche.php"><i class="fas fa-search fa-fw me-3"></i>Recherche</a></li>
             <hr>
             <li><a href="#"><i class="fas fa-caret-square-right fa-fw me-3"></i>Bibliothèque</a></li>
             <li><a href="#"><i class="fas fa-history fa-fw me-3"></i>Historique</a></li>
