@@ -1,6 +1,7 @@
 <?php
 // Inclure la configuration de session
 require_once __DIR__ . '/../config/session.php';
+
 // Vérifier si l'utilisateur est connecté, sinon rediriger vers la page de connexion
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
@@ -34,6 +35,17 @@ $sql = "SELECT p.id, p.photo, p.description, p.created_at, u.username
 $stmt = $pdo->prepare($sql);
 $stmt->execute();
 $publications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Récupération des chauffeurs triés par leur cote moyenne
+$sql = "SELECT u.id, u.nom, u.marque_voiture, u.plaque_immatriculation, u.couleur_voiture, u.profile_picture,
+               COALESCE(AVG(c.note), 0) AS average_rating
+        FROM users u
+        LEFT JOIN cotes c ON u.id = c.chauffeur_id
+        WHERE u.statut = 'chauffeur'
+        GROUP BY u.id
+        ORDER BY average_rating DESC";
+$stmt = $pdo->query($sql);
+$chauffeurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Utilisation de la variable globale $profile_picture pour afficher la photo de profil
 ?>
@@ -113,7 +125,7 @@ $publications = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 alt="MDB Logo" draggable="false" height="25" />
         </a>
         <ul class="sidenav-menu">
-            <li><a href="acceuil.php"><i class="fas fa-home fa-fw me-3"></i>Accueil</a></li>
+            <li><a href="accueil.php"><i class="fas fa-home fa-fw me-3"></i>Accueil</a></li>
             <li><a href="reservation.php"><i class="fas fa-calendar-check fa-fw me-3"></i>reservation</a></li>
             <li><a href="messages.php"><i class="fas fa-envelope fa-fw me-3"></i>Messages</a></li>
             <li><a href="recherche.php"><i class="fas fa-search fa-fw me-3"></i>Recherche</a></li>
@@ -209,6 +221,43 @@ $publications = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php else: ?>
             <div class="alert alert-light text-center w-100">Aucune publication disponible.</div>
         <?php endif; ?>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="container d-flex flex-column align-items-center mt-5" style="max-width: 1200px;">
+        <h2 class="text-white mb-4">Chauffeurs</h2>
+        <div class="row justify-content-center">
+            <?php foreach ($chauffeurs as $chauffeur): ?>
+                <div class="col-12 col-sm-6 col-lg-4 mb-4">
+                    <div class="card shadow-sm border-0 rounded-4">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <img src="<?php echo htmlspecialchars(
+                                    !empty($chauffeur['profile_picture']) 
+                                    ? $chauffeur['profile_picture'] 
+                                    : 'uploads/default.jpg'
+                                ); ?>" alt="Photo de profil" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                            </div>
+                            <h5 class="fw-bold mb-1"><?php echo htmlspecialchars($chauffeur['nom'] ?? 'Nom non disponible'); ?></h5>
+                            <p class="text-muted mb-2">
+                                <strong>Marque :</strong> <?php echo htmlspecialchars($chauffeur['marque_voiture'] ?? 'Non spécifiée'); ?><br>
+                                <strong>Plaque :</strong> <?php echo htmlspecialchars($chauffeur['plaque_immatriculation'] ?? 'Non spécifiée'); ?><br>
+                                <strong>Couleur :</strong> <?php echo htmlspecialchars($chauffeur['couleur_voiture'] ?? 'Non spécifiée'); ?>
+                            </p>
+                            <div class="d-flex justify-content-center align-items-center">
+                                <span class="badge bg-primary me-2">
+                                    <i class="fas fa-star"></i> <?php echo htmlspecialchars($chauffeur['average_rating']); ?> / 5
+                                </span>
+                                <a href="reservation.php?chauffeur_id=<?php echo $chauffeur['id']; ?>" class="btn btn-sm btn-outline-primary">
+                                    Réserver
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
     </div>
 </div>
 

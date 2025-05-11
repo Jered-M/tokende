@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS cotes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    chauffeur_id INT NOT NULL,
+    user_id INT NOT NULL,
+    note TINYINT NOT NULL CHECK (note BETWEEN 1 AND 5),
+    commentaire TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (chauffeur_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

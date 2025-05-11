@@ -66,6 +66,19 @@ function getOrSetProfilePicture($pdo, $user_id, $uploadedFile = null) {
 // Utilisation de la fonction pour gérer la photo de profil
 $profile_picture = getOrSetProfilePicture($pdo, $user_id, $_FILES['profile_picture'] ?? null);
 
+// Fonction pour récupérer la cote moyenne d'un chauffeur
+function getChauffeurRating($pdo, $user_id) {
+    $query = "SELECT AVG(note) AS average_rating FROM cotes WHERE chauffeur_id = :chauffeur_id";
+    $stmt = $pdo->prepare($query);
+    $stmt->bindParam(':chauffeur_id', $user_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['average_rating'] ? round($result['average_rating'], 2) : 'Non noté';
+}
+
+// Récupérer la cote moyenne du chauffeur
+$chauffeurRating = getChauffeurRating($pdo, $user_id);
+
 $successMessage = '';
 $errorMessage = '';
 
@@ -293,20 +306,14 @@ $currentStatut = $stmt->fetchColumn();
                                         </div>
                                         <h5 class="text-center mb-1"><?php echo htmlspecialchars($user['username'] ?? 'Utilisateur'); ?></h5>
                                         <p class="text-center text-secondary mb-4"><?php echo htmlspecialchars($user['role'] ?? 'Membre'); ?></p>
-                                        <ul class="list-group list-group-flush mb-4">
-                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                <h6 class="m-0">Abonnés</h6>
-                                                <span>0</span>
-                                            </li>
-                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                <h6 class="m-0">Abonnements</h6>
-                                                <span>0</span>
-                                            </li>
-                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                <h6 class="m-0">Amis</h6>
-                                                <span>0</span>
-                                            </li>
-                                        </ul>
+                                        <div class="col-12">
+                                        <div class="card widget-card border-light shadow-sm">
+                                            <div class="card-header text-bg-primary">Cote moyenne</div>
+                                            <div class="card-body">
+                                                <h5 class="text-center"><?php echo $chauffeurRating; ?> / 5</h5>
+                                            </div>
+                                        </div>
+                                    </div>
                                         <div class="d-grid m-0">
                                             <button class="btn btn-outline-primary" type="button" onclick="document.getElementById('profile-tab').click()">Modifier</button>
                                         </div>
@@ -378,14 +385,7 @@ $currentStatut = $stmt->fetchColumn();
                             </div>
                             <div class="col-12">
                                 <div class="card widget-card border-light shadow-sm">
-                                    <div class="card-header text-bg-primary">Compétences</div>
-                                    <div class="card-body">
-                                        <span class="badge text-bg-primary">PHP</span>
-                                        <span class="badge text-bg-primary">MySQL</span>
-                                        <span class="badge text-bg-primary">HTML</span>
-                                        <span class="badge text-bg-primary">CSS</span>
-                                        <span class="badge text-bg-primary">JavaScript</span>
-                                    </div>
+                                   
                                 </div>
                             </div>
                             <div class="col-12">
@@ -627,6 +627,7 @@ $currentStatut = $stmt->fetchColumn();
                                             </div>
                                         </div>
                                     </div>
+                                    
                                 </div>
                             </div>
                         </div>

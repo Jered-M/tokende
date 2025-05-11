@@ -10,6 +10,9 @@ if (!isset($_SESSION['user_id'])) {
 $pdo = getDatabaseConnection();
 $userId = $_SESSION['user_id'];
 
+// Vérifier si l'utilisateur est un chauffeur
+$isChauffeur = ($_SESSION['statut'] ?? '') === 'chauffeur';
+
 // Récupérer la liste des contacts avec leur dernier message envoyé ou reçu
 $sqlContacts = "
     SELECT u.id AS sender_id, u.username AS sender_name, u.profile_picture,
@@ -36,6 +39,16 @@ $sqlContacts = "
 $stmtContacts = $pdo->prepare($sqlContacts);
 $stmtContacts->execute([':user_id' => $userId]);
 $contacts = $stmtContacts->fetchAll(PDO::FETCH_ASSOC);
+
+// Récupérer les messages
+$sql = "SELECT m.message, m.created_at, u.username AS sender_name 
+        FROM message m 
+        JOIN users u ON m.user_id = u.id 
+        WHERE m.recipient_id = :recipient_id 
+        ORDER BY m.created_at DESC";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([':recipient_id' => $_SESSION['user_id']]);
+$messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -96,6 +109,29 @@ $contacts = $stmtContacts->fetchAll(PDO::FETCH_ASSOC);
             </div>
           </div>
           <!-- Colonne des messages à droite à ajouter ici si nécessaire -->
+          <div class="col-md-6 col-lg-7 col-xl-8">
+            <div class="container mt-5">
+              <h1 class="text-center">Messagerie</h1>
+              <div class="list-group">
+                <?php foreach ($messages as $message): ?>
+                  <div class="list-group-item">
+                    <p><strong><?php echo htmlspecialchars($message['sender_name']); ?>:</strong></p>
+                    <p><?php echo $message['message']; ?></p>
+                    <?php if ($isChauffeur && strpos($message['message'], 'localisation.php') !== false): ?>
+                      <?php
+                        // Modifier le lien pour inclure showUser=1
+                        $updatedLink = preg_replace('/localisation\.php/', 'localisation.php?showUser=1', $message['message']);
+                      ?>
+                      <a href="<?php echo htmlspecialchars($updatedLink); ?>" target="_blank">
+                        <i class="fa fa-map-marker" style="color: red;"></i> Voir la localisation
+                      </a>
+                    <?php endif; ?>
+                    <small class="text-muted"><?php echo htmlspecialchars($message['created_at']); ?></small>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
